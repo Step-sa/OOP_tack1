@@ -18,7 +18,7 @@ class Student(MyInterface):
     def __str__(self):
         if len(self.grades):
             return (f"Имя: {self.name}\nФамилия: {self.surname}\nСредняя оценка за домашние задания: "
-                    f"{sum(self.items_from_dict(self.grades))/len(self.grades)}\n"
+                    f"{self.average_grade()}\n"
                     f"Курсы в процессе изучения: {', '.join(self.courses_in_progress)}\n"
                     f"Завершенные курсы: {', '.join(self.finished_courses)}\n")
         else:
@@ -26,11 +26,32 @@ class Student(MyInterface):
                     f"Курсы в процессе изучения: {', '.join(self.courses_in_progress)}\n"
                     f"Завершенные курсы: {', '.join(self.finished_courses)}\n")
 
+    def __eq__(self, other):
+        return self.average_grade() == other.average_grade()
+
+    def __ne__(self, other):
+        return self.average_grade() != other.average_grade()
+
+    def __lt__(self, other):
+        return self.average_grade() < other.average_grade()
+
+    def __gt__(self, other):
+        return self.average_grade() > other.average_grade()
+
+    def __le__(self, other):
+        return self.average_grade() <= other.average_grade()
+
+    def __ge__(self, other):
+        return self.average_grade() >= other.average_grade()
+
     def lecturer_rate(self, rate: float, course: str, lecturer):
         if isinstance(lecturer, Lecturer):
             lecturer.courses_rates[course] += [rate]
         else:
             return "Ошибка"
+
+    def average_grade(self) -> float:
+        return sum(self.items_from_dict(self.grades)) / len(self.grades)
 
 
 class Mentor(MyInterface):
@@ -53,9 +74,30 @@ class Lecturer(Mentor):
     def __str__(self):
         if len(self.courses_rates):
             return (f"Имя: {self.name}\nФамилия: {self.surname}\nСредняя оценка за лекции: "
-                    f"{sum(self.items_from_dict(self.courses_rates)) / len(self.courses_rates.values())}\n")
+                    f"{self.average_grade()}\n")
         else:
             return f"Имя: {self.name}\nФамилия: {self.surname}\nСредняя оценка за лекции: 0.0\n"
+
+    def __eq__(self, other):
+        return self.average_grade() == other.average_grade()
+
+    def __ne__(self, other):
+        return self.average_grade() != other.average_grade()
+
+    def __lt__(self, other):
+        return self.average_grade() < other.average_grade()
+
+    def __gt__(self, other):
+        return self.average_grade() > other.average_grade()
+
+    def __le__(self, other):
+        return self.average_grade() <= other.average_grade()
+
+    def __ge__(self, other):
+        return self.average_grade() >= other.average_grade()
+
+    def average_grade(self) -> float:
+        return sum(self.items_from_dict(self.courses_rates)) / len(self.courses_rates.values())
 
     def update_courses(self, course: str):
         if course in self.courses_rates.keys():
@@ -78,6 +120,22 @@ class Reviewer(Mentor):
             return 'Ошибка'
 
 
+def average_grade_for_hw_by_course(students: list[Student], course: str) -> float:
+    grades = 0
+    grades_num = 0
+    for st in students:
+        grades += sum(st.grades[course])
+        grades_num += len(st.grades[course])
+    return round(grades / grades_num, 2)
+
+def average_grade_for_lection_by_course(lecturer: list[Lecturer], course: str) -> float:
+    grades = 0
+    grades_num = 0
+    for lec in lecturer:
+        grades += sum(lec.courses_rates[course])
+        grades_num += len(lec.courses_rates[course])
+    return round(grades / grades_num, 2)
+
 if __name__ == "__main__":
     reviewer1 = Reviewer("R1", "R1")
     lecturer1 = Lecturer("L1", "L1")
@@ -98,7 +156,15 @@ if __name__ == "__main__":
     reviewer1.rate_hw(student1, "Py", 5)
     reviewer1.rate_hw(student1, "Git", 4)
     reviewer2.rate_hw(student2, "Py", 2)
+    reviewer2.rate_hw(student1, "Py", 2)
     student1.lecturer_rate(10, "Py", lecturer1)
     student1.lecturer_rate(9, "Git", lecturer1)
     student2.lecturer_rate(1, "Py", lecturer2)
+    student2.lecturer_rate(3, "Py", lecturer2)
     print(reviewer1, reviewer2, lecturer1, lecturer2, student1, student2, sep="\n", end="")
+    print(student1 > student2)
+    print(student1 == student2)
+    print(lecturer1 < lecturer2)
+    print(lecturer1 >= lecturer2)
+    print(average_grade_for_hw_by_course([student1, student2], "Py"))
+    print(average_grade_for_lection_by_course([lecturer1, lecturer2], "Py"))
